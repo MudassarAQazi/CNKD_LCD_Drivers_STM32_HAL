@@ -1,0 +1,133 @@
+{	S25		S24		S23		S22		S27		S51		S50		S29	}
+{	13D		13E		13C		13G		13F		13B		13A		--	}
+{	14D		14E		14C		14G		14F		14B		14A		S26	}
+{	28D		28E		28C		28G		28F		28B		28A		S39	}
+{	29D		29E		29C		29G		29F		29B		29A		L6	}
+{	30D		30E		30C		30G		30F		30B		30A		D9	}
+{	31D		31E		31C		31G		31F		31B		31A		S40	}
+{	32D		32E		32C		32G		32F		32B		32A		--	}
+{	33D		33E		33C		33G		33F		33B		33A		D10	}
+{	34D		34E		34C		34G		34F		34B		34A		S42	}
+{	35D		35E		35C		35G		35F		35B		35A		S41	}
+{	15D		15E		15C		15G		15F		15B		15A		L7	}
+{	16D		16E		16C		16G		16F		16B		16A		L9	}
+{	17D		17E		17C		17G		17F		17B		17A		S28	}
+{	22D		22E		22C		22G		22F		22B		22A		S33	}
+{	23D		23E		23C		23G		23F		23B		23A		S31	}
+{	24D		24E		24C		24G		24F		24B		24A		D8	}
+{	25D		25E		25C		25G		25F		25B		25A		S32	}
+{	18D		18E		18C		18G		18F		18B		18A		S44	}
+{	19D		19E		19C		19G		19F		19B		19A		S46	}
+{	20D		20E		20C		20G		20F		20B		20A		D7	}
+{	21D		21E		21C		21G		21F		21B		21A		S45	}
+{	L8		L10		S37		S36		S35		S34		S49		--	}
+{	26D		26E		26C		26G		26F		26B		26A		S30	}
+{	27D		27E		27C		27G		27F		27B		27A		S38	}
+{	--		36A		36F		36H		36G		36E		36L		36M	}
+{	--		36I		36J		36B		36K		36C		36N		36D	}
+{	--		37A		37F		37H		37G		37E		37L		37M	}
+{	--		37I		37J		37B		37K		37C		37N		37D	}
+{	S43		38A		38F		38H		38G		38E		38L		38M	}
+{	--		38I		38J		38B		38K		38C		38N		38D	}
+{	39A		39B		39F		39G		39C		39E		39D		S5	}
+{	--		--		X1		X2		X3		X4		X5		S6	}
+{	T8		T9		T10		T11		T12		T13		T14		L2	}
+{	D6		12D		12E		12C		12G		12F		12B		12A	}
+{	--		--		--		--		--		--		S21		S20	}
+{	L5		11D		11E		11C		11G		11F		11B		11A	}
+{	--		10D		10E		10C		10G		10F		10B		10A	}
+{	--		--		--		--		D4		D5		S19		L11	}
+{	L4		9D		9E		9C		9G		9F		9B		9A	}
+{	S12		8D		8E		8C		8G		8F		8B		8A	}
+{	S15		7D		7E		7C		7G		7F		7B		7A	}
+{	--		6D		6E		6C		6G		6F		6B		6A	}
+{	S47		5D		5E		5C		5G		5F		5B		5A	}
+{	S10		4D		4E		4C		4G		4F		4B		4A	}
+{	S16		S17		S18		S14		S13		S2		S3		--	}
+{	--		T1		T2		T3		T4		T5		T6		T7	}
+{	L12		3D		3E		3C		3G		3F		3B		3A	}
+{	--		--		--		--		--		--		S9		S8	}
+{	D3		2D		2E		2C		2G		2F		2B		2A	}
+{	L3		1D		1E		1C		1G		1F		1B		1A	}
+{	--		--		--		D1		D2		S7		L1		S1	}
+
+
+
+/// ------------------------------------ T2SV CNKD1103_HT16C24A (with Reversed COM) Segment Verification Code START -----------------------------
+uint8_t serialRead = '\0';
+	  uint8_t segmentCode = 0;
+	  uint8_t segmentMask[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+	  for(uint8_t i = 0; i < 52; i++)
+		  for(uint8_t j = 0; j < 8; j++)
+		  {
+			  up:
+			  HAL_StatusTypeDef status = HAL_UART_Receive(&uart, &serialRead, 1, 100);
+//			  size = sprintf((char*)msg, "Character %c, %d, %x", serialRead, serialRead, serialRead);
+//			  HAL_UART_Transmit(&uart, (uint8_t*)msg, size, HAL_MAX_DELAY); memset(msg, 0, (size_t) sizeof(msg));
+
+			  if((status == HAL_OK) && (serialRead == '0'))
+			  {
+				  lcd.displayClear();
+
+				  HAL_Delay(10);
+
+				  segmentCode &= segmentMask[j]; segmentCode |= segmentMask[j];
+				  HAL_StatusTypeDef i2cStatus = lcd.writeDataToI2C(&i, &segmentCode, 1);
+
+				  if(i2cStatus == HAL_OK)
+				  {
+					  size = sprintf((char*)msg, "\nAddress: %d, S: %d\tSuccess\r\n", i, (8-j));
+				  }
+				  else
+				  {
+					  size = sprintf((char*)msg, "Failed Segment Update...\r\n");
+				  }
+				  HAL_UART_Transmit(&uart, (uint8_t*)msg, size, HAL_MAX_DELAY); memset(msg, 0, (size_t) sizeof(msg));
+				  HAL_Delay(10);
+			  }
+			  else
+			  {
+//				  size = sprintf((char*)msg, ".");
+//				  HAL_UART_Transmit(&uart, (uint8_t*)msg, size, HAL_MAX_DELAY); memset(msg, 0, (size_t) sizeof(msg));
+				  HAL_Delay(200);
+				  goto up;
+			  }
+
+			  HAL_Delay(10);
+		  }
+/// ------------------------------------ T2SV CNKD1103_HT16C24A (with Reversed COM) Segment Verification Code END -----------------------------
+
+/// ------------------------------------ T2SV CNKD1103_HT16C24A (with Reversed COM) Turning Icons ON Code START -----------------------------
+uint8_t serialRead = '\0';
+	  for(uint8_t i = 0; i < 52; i++)
+		  //for(uint8_t j = 0; j < 8; j++)
+		  {
+			  up:
+			  HAL_StatusTypeDef status = HAL_UART_Receive(&uart, &serialRead, 1, 100);
+
+			  if((status == HAL_OK) && (serialRead == '0'))
+			  {
+				  HAL_StatusTypeDef i2cStatus = lcd.icon(i, true);
+
+				  if(i2cStatus == HAL_OK)
+				  {
+					  size = sprintf((char*)msg, "\nIcon: %d\tSuccess\r\n", i);
+				  }
+				  else
+				  {
+					  size = sprintf((char*)msg, "Failed Segment Update...\r\n");
+				  }
+				  HAL_UART_Transmit(&uart, (uint8_t*)msg, size, HAL_MAX_DELAY); memset(msg, 0, (size_t) sizeof(msg));
+				  HAL_Delay(10);
+			  }
+			  else
+			  {
+				  HAL_Delay(200);
+				  goto up;
+			  }
+
+			  HAL_Delay(10);
+		  }
+/// ------------------------------------ T2SV CNKD1103_HT16C24A (with Reversed COM) Turning Icons ON Code END -----------------------------
+
+
